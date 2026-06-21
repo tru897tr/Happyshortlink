@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đang tải bài viết… — Tín Hiệu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .post-wrap { padding: 40px 0 70px; max-width: 700px; margin: 0 auto; }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+  .back-link:hover { color: var(--accent); }
+
+  .post-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .post-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 4.2vw, 2.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin: 0 0 20px;
+  }
+
+  .post-cover {
+    width: 100%;
+    border-radius: var(--radius-lg);
+    margin-bottom: 28px;
+    border: 1px solid var(--border);
+  }
+
+  .post-content {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: #d6d8de;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .post-tags-row { display: flex; gap: 8px; margin-top: 36px; flex-wrap: wrap; }
+  .tag-chip {
+    font-size: 0.76rem;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  .share-row {
+    margin-top: 30px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="/" class="logo">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Tín Hiệu
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link"><span class="full">Bảng tin</span> 📰</a>
+      <a href="/create" class="nav-link"><span class="full">Đăng bài</span> ✍️</a>
+    </div>
+  </nav>
+</header>
+
+<main class="container post-wrap" id="postContainer">
+  <a href="/" class="back-link">← Quay lại bảng tin</a>
+  <div class="skeleton" style="height:32px; width:40%; margin-bottom:16px; border-radius:6px;"></div>
+  <div class="skeleton" style="height:48px; margin-bottom:24px; border-radius:8px;"></div>
+  <div class="skeleton" style="height:300px; border-radius:8px;"></div>
+</main>
+
+<footer class="site-footer">
+  Tín Hiệu — hệ thống rút gọn liên kết &amp; bảng tin.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="/app.js"></script>
+<script>
+(function () {
+  const slug = window.location.pathname.split('/').pop();
+  const container = document.getElementById('postContainer');
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatDate(ts) {
+    return new Date(ts).toLocaleString('vi-VN', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(`/api/posts/${encodeURIComponent(slug)}`);
+      const json = await res.json();
+
+      if (!json.success) {
+        container.innerHTML = `
+          <a href="/" class="back-link">← Quay lại bảng tin</a>
+          <div class="card" style="text-align:center; padding:50px 20px;">
+            <p class="post-title" style="font-size:1.4rem;">Không tìm thấy bài viết</p>
+            <p class="text-muted">${escapeHtml(json.error?.message || 'Bài viết có thể đã bị xoá.')}</p>
+            <a href="/" class="btn btn-primary" style="margin-top:14px; display:inline-flex;">Về trang chủ</a>
+          </div>`;
+        return;
+      }
+
+      const p = json.data;
+      document.title = `${p.title} — Tín Hiệu`;
+
+      container.innerHTML = `
+        <a href="/" class="back-link">← Quay lại bảng tin</a>
+        <div class="post-meta-line">
+          <span>✍️ ${escapeHtml(p.author)}</span>
+          <span>·</span>
+          <span>${formatDate(p.createdAt)}</span>
+          <span>·</span>
+          <span>👁 ${p.views} lượt xem</span>
+        </div>
+        <h1 class="post-title">${escapeHtml(p.title)}</h1>
+        ${p.coverImage ? `<img class="post-cover" src="${escapeHtml(p.coverImage)}" alt="">` : ''}
+        <article class="post-content">${escapeHtml(p.content)}</article>
+        ${p.tags && p.tags.length ? `<div class="post-tags-row">${p.tags.map(t => `<span class="tag-chip">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        <div class="share-row">
+          <button class="btn btn-ghost btn-sm" id="copyLinkBtn">Sao chép liên kết bài viết</button>
+        </div>
+      `;
+
+      document.getElementById('copyLinkBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(window.location.href);
+        window.showToast('Đã sao chép liên kết bài viết!');
+      });
+    } catch (err) {
+      container.innerHTML = `<div class="empty-state">Không thể kết nối tới server.</div>`;
+    }
+  }
+
+  load();
+})();
+</script>
+
+</body>
+</html>

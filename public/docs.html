@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tài liệu API — Tín Hiệu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .docs-wrap { display: grid; grid-template-columns: 200px 1fr; gap: 40px; padding: 40px 0 80px; }
+  @media (max-width: 800px) { .docs-wrap { grid-template-columns: 1fr; } }
+
+  .toc { position: sticky; top: 90px; align-self: start; }
+  .toc a {
+    display: block;
+    padding: 7px 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .toc a:hover { color: var(--accent); }
+
+  .docs-h1 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    margin: 0 0 8px;
+  }
+  .docs-lead { color: var(--text-muted); margin: 0 0 36px; }
+
+  .endpoint {
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 90px;
+  }
+  .endpoint:last-child { border-bottom: none; }
+
+  .endpoint-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .method-badge {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 5px;
+  }
+  .method-get { background: rgba(94,234,212,0.15); color: var(--accent); }
+  .method-post { background: rgba(255,180,84,0.15); color: var(--warn); }
+  .method-put { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .method-delete { background: rgba(255,107,107,0.15); color: var(--danger); }
+
+  .endpoint-path {
+    font-family: var(--font-mono);
+    font-size: 0.96rem;
+  }
+  .endpoint-desc { color: var(--text-muted); margin: 0 0 18px; font-size: 0.94rem; }
+
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    overflow-x: auto;
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+  .code-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+  }
+
+  .table-wrap { overflow-x: auto; margin-bottom: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; }
+  td code { font-family: var(--font-mono); color: var(--accent); font-size: 0.82rem; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="/" class="logo">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Tín Hiệu
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link"><span class="full">Bảng tin</span> 📰</a>
+      <a href="/create" class="nav-link"><span class="full">Đăng bài</span> ✍️</a>
+      <a href="/docs" class="nav-link is-active"><span class="full">API Docs</span> ⚙️</a>
+    </div>
+  </nav>
+</header>
+
+<main class="container docs-wrap">
+  <nav class="toc">
+    <a href="#intro">Giới thiệu</a>
+    <a href="#create-link">Tạo link rút gọn</a>
+    <a href="#get-link">Xem thông tin link</a>
+    <a href="#list-links">Danh sách link</a>
+    <a href="#delete-link">Xoá link</a>
+    <a href="#create-post">Tạo bài viết</a>
+    <a href="#list-posts">Danh sách bài viết</a>
+    <a href="#get-post">Xem bài viết</a>
+    <a href="#update-post">Cập nhật bài viết</a>
+    <a href="#delete-post">Xoá bài viết</a>
+    <a href="#errors">Mã lỗi</a>
+  </nav>
+
+  <div>
+    <h1 class="docs-h1">Tài liệu API</h1>
+    <p class="docs-lead" id="intro">
+      Toàn bộ dữ liệu được lưu trong bộ nhớ RAM của server — không sử dụng cơ sở dữ liệu ngoài.
+      Mọi response đều theo định dạng JSON đồng nhất: <code class="mono">{ success, data }</code> khi thành công,
+      hoặc <code class="mono">{ success: false, error: { code, message } }</code> khi có lỗi.
+    </p>
+
+    <section class="endpoint" id="create-link">
+      <div class="endpoint-head">
+        <span class="method-badge method-post">POST</span>
+        <span class="endpoint-path">/api/links</span>
+      </div>
+      <p class="endpoint-desc">Tạo một liên kết rút gọn mới từ URL gốc.</p>
+
+      <div class="code-label">Request body</div>
+      <div class="code-block">{
+  "url": "https://example.com/duong-dan-rat-dai",
+  "customCode": "my-link",      <span class="text-muted">// không bắt buộc</span>
+  "ttlMinutes": 1440             <span class="text-muted">// không bắt buộc — thời gian sống (phút)</span>
+}</div>
+
+      <div class="code-label">Response 201</div>
+      <div class="code-block">{
+  "success": true,
+  "data": {
+    "code": "aZ3kP9q",
+    "originalUrl": "https://example.com/duong-dan-rat-dai",
+    "shortUrl": "https://your-app.onrender.com/link/aZ3kP9q",
+    "createdAt": 1771600000000,
+    "expiresAt": null
+  }
+}</div>
+    </section>
+
+    <section class="endpoint" id="get-link">
+      <div class="endpoint-head">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-path">/api/links/:code</span>
+      </div>
+      <p class="endpoint-desc">Lấy thông tin chi tiết một liên kết (không tăng lượt nhấp). Trang đếm ngược dùng endpoint này để biết link đích.</p>
+    </section>
+
+    <section class="endpoint" id="list-links">
+      <div class="endpoint-head">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-path">/api/links?limit=50&offset=0</span>
+      </div>
+      <p class="endpoint-desc">Lấy danh sách các liên kết đã tạo, sắp xếp theo mới nhất.</p>
+    </section>
+
+    <section class="endpoint" id="delete-link">
+      <div class="endpoint-head">
+        <span class="method-badge method-delete">DELETE</span>
+        <span class="endpoint-path">/api/links/:code</span>
+      </div>
+      <p class="endpoint-desc">Xoá một liên kết rút gọn khỏi hệ thống.</p>
+    </section>
+
+    <section class="endpoint" id="create-post">
+      <div class="endpoint-head">
+        <span class="method-badge method-post">POST</span>
+        <span class="endpoint-path">/api/posts</span>
+      </div>
+      <p class="endpoint-desc">Đăng một bài viết mới gồm tiêu đề và nội dung đầy đủ.</p>
+
+      <div class="code-label">Request body</div>
+      <div class="code-block">{
+  "title": "Tiêu đề bài viết",
+  "content": "Nội dung đầy đủ của bài viết...",
+  "author": "Nguyễn Văn A",      <span class="text-muted">// không bắt buộc</span>
+  "tags": ["tin-tuc", "cong-nghe"], <span class="text-muted">// không bắt buộc</span>
+  "coverImage": "https://..."     <span class="text-muted">// không bắt buộc</span>
+}</div>
+
+      <div class="code-label">Response 201</div>
+      <div class="code-block">{
+  "success": true,
+  "data": {
+    "id": "k29sJ1mzQa",
+    "slug": "tieu-de-bai-viet",
+    "title": "Tiêu đề bài viết",
+    "excerpt": "Nội dung đầy đủ của bài viết...",
+    "url": "https://your-app.onrender.com/post/tieu-de-bai-viet"
+  }
+}</div>
+    </section>
+
+    <section class="endpoint" id="list-posts">
+      <div class="endpoint-head">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-path">/api/posts?limit=20&offset=0&tag=tin-tuc</span>
+      </div>
+      <p class="endpoint-desc">
+        API "ping" — lấy danh sách bài viết mới nhất. Mỗi item gồm tiêu đề và đoạn trích (excerpt),
+        dùng để hiển thị trên trang chủ. Gọi định kỳ để theo dõi bài viết mới.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tham số</th><th>Kiểu</th><th>Mặc định</th><th>Mô tả</th></tr></thead>
+          <tbody>
+            <tr><td><code>limit</code></td><td>number</td><td>20 (tối đa 100)</td><td>Số bài viết mỗi trang</td></tr>
+            <tr><td><code>offset</code></td><td>number</td><td>0</td><td>Vị trí bắt đầu</td></tr>
+            <tr><td><code>tag</code></td><td>string</td><td>—</td><td>Lọc theo thẻ chủ đề</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="endpoint" id="get-post">
+      <div class="endpoint-head">
+        <span class="method-badge method-get">GET</span>
+        <span class="endpoint-path">/api/posts/:idOrSlug</span>
+      </div>
+      <p class="endpoint-desc">Lấy đầy đủ nội dung một bài viết (tiêu đề + toàn bộ nội dung), tăng lượt xem.</p>
+    </section>
+
+    <section class="endpoint" id="update-post">
+      <div class="endpoint-head">
+        <span class="method-badge method-put">PUT</span>
+        <span class="endpoint-path">/api/posts/:id</span>
+      </div>
+      <p class="endpoint-desc">Cập nhật một phần hoặc toàn bộ nội dung bài viết.</p>
+    </section>
+
+    <section class="endpoint" id="delete-post">
+      <div class="endpoint-head">
+        <span class="method-badge method-delete">DELETE</span>
+        <span class="endpoint-path">/api/posts/:id</span>
+      </div>
+      <p class="endpoint-desc">Xoá một bài viết khỏi hệ thống.</p>
+    </section>
+
+    <section class="endpoint" id="errors">
+      <div class="endpoint-head"><span class="endpoint-path" style="font-size:1.1rem;">Mã lỗi thường gặp</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>HTTP</th><th>Code</th><th>Ý nghĩa</th></tr></thead>
+          <tbody>
+            <tr><td>400</td><td><code>URL_INVALID</code></td><td>URL không hợp lệ</td></tr>
+            <tr><td>404</td><td><code>LINK_NOT_FOUND</code></td><td>Không tìm thấy link hoặc đã hết hạn</td></tr>
+            <tr><td>409</td><td><code>CUSTOM_CODE_TAKEN</code></td><td>Mã tuỳ chỉnh đã được dùng</td></tr>
+            <tr><td>404</td><td><code>POST_NOT_FOUND</code></td><td>Không tìm thấy bài viết</td></tr>
+            <tr><td>429</td><td><code>RATE_LIMITED</code></td><td>Gửi quá nhiều yêu cầu</td></tr>
+            <tr><td>500</td><td><code>INTERNAL_ERROR</code></td><td>Lỗi không mong muốn ở server</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  Tín Hiệu — hệ thống rút gọn liên kết &amp; bảng tin.
+</footer>
+
+</body>
+</html>

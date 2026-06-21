@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đang chuyển hướng… — Tín Hiệu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .redirect-wrap {
+    min-height: calc(100vh - 70px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .redirect-card {
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+  .ring-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 28px;
+  }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: var(--border); stroke-width: 6; }
+  .ring-progress {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+  }
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .ring-number {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+    transition: color 0.3s;
+  }
+  .ring-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  .status-text {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    margin: 0 0 10px;
+  }
+  .dest-preview {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    word-break: break-all;
+    margin-bottom: 26px;
+  }
+
+  .go-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 1rem;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.35s, transform 0.35s;
+  }
+  .go-btn.is-ready {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .skip-hint {
+    margin-top: 14px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .error-box { display: none; }
+  .error-box.is-visible { display: block; }
+  .hide-on-error.is-hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="/" class="logo">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Tín Hiệu
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link"><span class="full">Bảng tin</span> 📰</a>
+      <a href="/create" class="nav-link"><span class="full">Đăng bài</span> ✍️</a>
+    </div>
+  </nav>
+</header>
+
+<main class="redirect-wrap container">
+  <div class="redirect-card" id="loadingState">
+    <div class="skeleton" style="width:200px; height:200px; border-radius:50%; margin:0 auto 28px;"></div>
+    <div class="skeleton" style="height:24px; width:60%; margin:0 auto 12px; border-radius:6px;"></div>
+    <div class="skeleton" style="height:40px; border-radius:8px;"></div>
+  </div>
+
+  <div class="redirect-card hide-on-error" id="readyState" style="display:none;">
+    <div class="ring-wrap">
+      <svg width="200" height="200" viewBox="0 0 200 200">
+        <circle class="ring-track" cx="100" cy="100" r="90"></circle>
+        <circle class="ring-progress" id="ringProgress" cx="100" cy="100" r="90"
+                stroke-dasharray="565.48" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-number" id="countNumber">30</div>
+        <div class="ring-label" id="ringLabel">giây</div>
+      </div>
+    </div>
+
+    <p class="status-text" id="statusText">Đang chuẩn bị chuyển hướng…</p>
+    <div class="dest-preview" id="destPreview">—</div>
+
+    <a class="btn btn-primary go-btn" id="goBtn">Đi đến trang đích →</a>
+    <p class="skip-hint">Liên kết được kiểm tra và rút gọn bởi Tín Hiệu.</p>
+  </div>
+
+  <div class="redirect-card card error-box" id="errorState">
+    <p class="status-text" style="color: var(--danger);">Không tìm thấy liên kết</p>
+    <p class="text-muted" id="errorMessage">Liên kết này không tồn tại hoặc đã hết hạn.</p>
+    <a class="btn btn-ghost" href="/" style="margin-top:16px;">Về trang chủ</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  Tín Hiệu — hệ thống rút gọn liên kết &amp; bảng tin.
+</footer>
+
+<script src="/app.js"></script>
+<script>
+(function () {
+  const COUNTDOWN_SECONDS = 30;
+  const CIRCUMFERENCE = 2 * Math.PI * 90; // r=90
+
+  const code = window.location.pathname.split('/').pop();
+
+  const loadingState = document.getElementById('loadingState');
+  const readyState = document.getElementById('readyState');
+  const errorState = document.getElementById('errorState');
+  const errorMessage = document.getElementById('errorMessage');
+  const ringProgress = document.getElementById('ringProgress');
+  const countNumber = document.getElementById('countNumber');
+  const statusText = document.getElementById('statusText');
+  const destPreview = document.getElementById('destPreview');
+  const goBtn = document.getElementById('goBtn');
+
+  function showError(message) {
+    loadingState.style.display = 'none';
+    readyState.style.display = 'none';
+    errorState.classList.add('is-visible');
+    if (message) errorMessage.textContent = message;
+  }
+
+  async function init() {
+    try {
+      const infoRes = await fetch(`/api/links/${encodeURIComponent(code)}`);
+      const infoJson = await infoRes.json();
+
+      if (!infoJson.success) {
+        showError(infoJson.error?.message);
+        return;
+      }
+
+      const originalUrl = infoJson.data.originalUrl;
+      destPreview.textContent = originalUrl;
+
+      loadingState.style.display = 'none';
+      readyState.style.display = 'block';
+
+      startCountdown(originalUrl);
+    } catch (err) {
+      showError('Không thể kết nối tới server. Vui lòng thử lại.');
+    }
+  }
+
+  function startCountdown(originalUrl) {
+    let remaining = COUNTDOWN_SECONDS;
+    ringProgress.setAttribute('stroke-dasharray', CIRCUMFERENCE.toFixed(2));
+
+    function tick() {
+      countNumber.textContent = remaining;
+      const fraction = remaining / COUNTDOWN_SECONDS;
+      const offset = CIRCUMFERENCE * (1 - fraction);
+      ringProgress.style.strokeDashoffset = offset.toFixed(2);
+
+      if (remaining <= 5) {
+        ringProgress.style.stroke = 'var(--warn)';
+        countNumber.style.color = 'var(--warn)';
+      }
+
+      if (remaining <= 0) {
+        clearInterval(timer);
+        finish(originalUrl);
+        return;
+      }
+      remaining -= 1;
+    }
+
+    tick();
+    const timer = setInterval(tick, 1000);
+  }
+
+  async function finish(originalUrl) {
+    statusText.textContent = 'Liên kết của bạn đã sẵn sàng';
+    document.getElementById('ringLabel').textContent = 'hoàn tất';
+    countNumber.textContent = '✓';
+
+    goBtn.href = originalUrl;
+    goBtn.classList.add('is-ready');
+    goBtn.target = '_blank';
+    goBtn.rel = 'noopener noreferrer';
+
+    // Ghi nhận lượt click khi người dùng thực sự bấm đi (resolve = tăng counter)
+    goBtn.addEventListener('click', () => {
+      fetch(`/api/links/${encodeURIComponent(code)}/resolve`, { method: 'POST' }).catch(() => {});
+    }, { once: true });
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>

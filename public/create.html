@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đăng bài viết — Tín Hiệu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .form-wrap { max-width: 640px; margin: 0 auto; padding: 44px 0 70px; }
+  .form-wrap h1 {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    margin: 0 0 8px;
+  }
+  .form-wrap .lead { color: var(--text-muted); margin: 0 0 32px; }
+  .char-count {
+    text-align: right;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+    font-family: var(--font-mono);
+  }
+  .success-box { display: none; text-align: center; padding: 40px 20px; }
+  .success-box.is-visible { display: block; }
+  .success-box .check {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 1.8rem;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="/" class="logo">
+      <span class="logo-mark" aria-hidden="true"></span>
+      Tín Hiệu
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link"><span class="full">Bảng tin</span> 📰</a>
+      <a href="/create" class="nav-link is-active"><span class="full">Đăng bài</span> ✍️</a>
+    </div>
+  </nav>
+</header>
+
+<main class="container form-wrap">
+  <div id="formState">
+    <h1>Đăng bài viết mới</h1>
+    <p class="lead">Bài viết sẽ xuất hiện ngay trên bảng tin và qua API <code class="mono">/api/posts</code>.</p>
+
+    <form id="postForm" class="card">
+      <div class="field">
+        <label class="field-label" for="titleInput">Tiêu đề</label>
+        <input class="input" id="titleInput" type="text" maxlength="200" placeholder="Ví dụ: 5 mẹo tối ưu tốc độ website" required>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="authorInput">Tác giả (không bắt buộc)</label>
+        <input class="input" id="authorInput" type="text" maxlength="60" placeholder="Tên của bạn">
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="tagsInput">Thẻ chủ đề (không bắt buộc, phân tách bởi dấu phẩy)</label>
+        <input class="input" id="tagsInput" type="text" placeholder="công-nghệ, mẹo-hay, tin-tức">
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="contentInput">Nội dung bài viết</label>
+        <textarea class="textarea" id="contentInput" placeholder="Viết nội dung đầy đủ tại đây…" required></textarea>
+        <div class="char-count"><span id="charCount">0</span> ký tự</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Đăng bài viết</button>
+    </form>
+  </div>
+
+  <div class="card success-box" id="successState">
+    <div class="check">✓</div>
+    <p class="post-title" style="font-family:var(--font-display); font-size:1.3rem; margin:0 0 8px;">Đã đăng bài viết!</p>
+    <p class="text-muted" style="margin:0 0 22px;">Bài viết của bạn đã xuất hiện trên bảng tin.</p>
+    <div class="flex gap-12" style="justify-content:center;">
+      <a class="btn btn-primary" id="viewPostBtn">Xem bài viết</a>
+      <button class="btn btn-ghost" id="writeAnotherBtn">Viết bài khác</button>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  Tín Hiệu — hệ thống rút gọn liên kết &amp; bảng tin.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="/app.js"></script>
+<script>
+(function () {
+  const form = document.getElementById('postForm');
+  const titleInput = document.getElementById('titleInput');
+  const authorInput = document.getElementById('authorInput');
+  const tagsInput = document.getElementById('tagsInput');
+  const contentInput = document.getElementById('contentInput');
+  const charCount = document.getElementById('charCount');
+  const submitBtn = document.getElementById('submitBtn');
+  const formState = document.getElementById('formState');
+  const successState = document.getElementById('successState');
+  const viewPostBtn = document.getElementById('viewPostBtn');
+  const writeAnotherBtn = document.getElementById('writeAnotherBtn');
+
+  contentInput.addEventListener('input', () => {
+    charCount.textContent = contentInput.value.length;
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
+    if (!title || !content) return;
+
+    const tags = tagsInput.value
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean)
+      .slice(0, 8);
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Đang đăng...';
+
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          content,
+          author: authorInput.value.trim() || undefined,
+          tags,
+        }),
+      });
+      const json = await res.json();
+
+      if (!json.success) {
+        window.showToast(json.error.message || 'Không thể đăng bài viết.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Đăng bài viết';
+        return;
+      }
+
+      formState.style.display = 'none';
+      successState.classList.add('is-visible');
+      viewPostBtn.href = json.data.url;
+    } catch (err) {
+      window.showToast('Không thể kết nối tới server.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Đăng bài viết';
+    }
+  });
+
+  writeAnotherBtn.addEventListener('click', () => {
+    form.reset();
+    charCount.textContent = '0';
+    successState.classList.remove('is-visible');
+    formState.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Đăng bài viết';
+  });
+})();
+</script>
+
+</body>
+</html>
