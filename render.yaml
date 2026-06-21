@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: shortlink-news-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.x
+      # BASE_URL: nên đặt sau khi Render cấp domain, ví dụ:
+      # https://shortlink-news-api.onrender.com
+      # Nếu không đặt, server tự suy ra từ request host.
+      - key: BASE_URL
+        sync: false

@@ -1,0 +1,23 @@
+{
+  "name": "shortlink-news-api",
+  "version": "1.0.0",
+  "description": "API rút gọn link + quản lý bài viết, lưu trữ trong RAM, sẵn sàng deploy Render",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "nanoid": "^3.3.7",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.4.0",
+    "compression": "^1.7.4"
+  },
+  "license": "MIT"
+}
