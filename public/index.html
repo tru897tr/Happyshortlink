@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tín Hiệu — Rút gọn link & Bảng tin</title>
-<meta name="description" content="Rút gọn liên kết và đọc tin tức mới nhất, dữ liệu được xử lý theo thời gian thực.">
+<title>Happyshortlink — Bảng tin</title>
+<meta name="description" content="Đọc tin tức mới nhất, dữ liệu được xử lý theo thời gian thực.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
@@ -53,7 +53,7 @@
 
   .layout {
     display: grid;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: 1fr 280px;
     gap: 32px;
     align-items: start;
     padding-bottom: 60px;
@@ -134,34 +134,6 @@
 
   .sidebar { position: sticky; top: 90px; display: flex; flex-direction: column; gap: 18px; }
 
-  .shortener-card .card-title {
-    font-family: var(--font-display);
-    font-size: 1.05rem;
-    margin: 0 0 4px;
-  }
-  .shortener-card .card-sub {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin: 0 0 18px;
-  }
-
-  .result-box {
-    margin-top: 16px;
-    background: var(--surface-2);
-    border: 1px solid var(--accent);
-    border-radius: 9px;
-    padding: 12px 14px;
-    display: none;
-  }
-  .result-box.is-visible { display: block; }
-  .result-url {
-    font-family: var(--font-mono);
-    font-size: 0.88rem;
-    color: var(--accent);
-    word-break: break-all;
-    margin-bottom: 8px;
-  }
-
   .stat-strip {
     display: flex;
     gap: 18px;
@@ -170,6 +142,18 @@
     color: var(--text-muted);
   }
   .stat-strip b { color: var(--text); font-size: 1rem; display: block; font-family: var(--font-display); }
+
+  .about-card .card-title {
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    margin: 0 0 8px;
+  }
+  .about-card p {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.6;
+  }
 
   .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }
 </style>
@@ -180,12 +164,10 @@
   <nav class="nav">
     <a href="/" class="logo">
       <span class="logo-mark" aria-hidden="true"></span>
-      Tín Hiệu
+      Happyshortlink
     </a>
     <div class="nav-links">
       <a href="/" class="nav-link is-active"><span class="full">Bảng tin</span> 📰</a>
-      <a href="/create" class="nav-link"><span class="full">Đăng bài</span> ✍️</a>
-      <a href="/docs" class="nav-link"><span class="full">API Docs</span> ⚙️</a>
     </div>
   </nav>
 </header>
@@ -194,8 +176,8 @@
 
   <section class="hero">
     <div class="hero-eyebrow"><span class="pulse-dot"></span> Dữ liệu xử lý trực tiếp trong RAM</div>
-    <h1>Rút gọn liên kết.<br>Theo dõi tin tức mới nhất.</h1>
-    <p class="lead">Một API gọn nhẹ cho việc rút ngắn URL và phát bài viết theo thời gian thực — không cần cơ sở dữ liệu, không cần chờ đợi.</p>
+    <h1>Theo dõi tin tức mới nhất.</h1>
+    <p class="lead">Bảng tin được phát theo thời gian thực — không cần cơ sở dữ liệu, không cần chờ đợi.</p>
   </section>
 
   <div class="layout">
@@ -213,32 +195,18 @@
     </section>
 
     <aside class="sidebar">
-      <div class="card shortener-card">
-        <p class="card-title">Rút gọn liên kết</p>
-        <p class="card-sub">Dán URL dài, nhận về link ngắn ngay lập tức.</p>
-
-        <form id="shortenForm">
-          <div class="field">
-            <input class="input" type="url" id="urlInput" placeholder="https://example.com/duong-dan-rat-dai" required>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block" id="shortenBtn">Tạo link rút gọn</button>
-        </form>
-
-        <div class="result-box" id="resultBox">
-          <div class="result-url" id="resultUrl"></div>
-          <div class="flex gap-8">
-            <button class="btn btn-ghost btn-sm" id="copyBtn" style="flex:1;">Sao chép</button>
-            <a class="btn btn-primary btn-sm" id="openBtn" target="_blank" style="flex:1; text-align:center;">Mở thử</a>
-          </div>
+      <div class="card">
+        <div class="stat-strip" id="statStrip">
+          <div><b id="statPosts">—</b>bài viết</div>
+          <div><b id="statLinks">—</b>liên kết</div>
+          <div><b id="statClicks">—</b>lượt nhấp</div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="stat-strip" id="statStrip">
-          <div><b id="statLinks">—</b>liên kết</div>
-          <div><b id="statPosts">—</b>bài viết</div>
-          <div><b id="statClicks">—</b>lượt nhấp</div>
-        </div>
+      <div class="card about-card">
+        <p class="card-title">Về Happyshortlink</p>
+        <p>Hệ thống rút gọn liên kết &amp; bảng tin. Việc tạo liên kết rút gọn và đăng bài viết
+        chỉ thực hiện được qua API quản trị có xác thực — không khả dụng trực tiếp trên trang web này.</p>
       </div>
     </aside>
   </div>
@@ -246,7 +214,7 @@
 </main>
 
 <footer class="site-footer">
-  Tín Hiệu — hệ thống rút gọn liên kết &amp; bảng tin, dữ liệu lưu trong bộ nhớ server.
+  Happyshortlink — hệ thống rút gọn liên kết &amp; bảng tin, dữ liệu lưu trong bộ nhớ server.
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -281,7 +249,7 @@
   async function loadPosts() {
     postFeed.innerHTML = '<div class="skeleton" style="height:120px;"></div><div class="skeleton" style="height:120px;"></div>';
     try {
-      const res = await fetch(`/api/posts?limit=${LIMIT}&offset=${offset}`);
+      const res = await fetch(`/public/posts?limit=${LIMIT}&offset=${offset}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message);
 
@@ -289,7 +257,7 @@
       const items = json.data.items;
 
       if (items.length === 0) {
-        postFeed.innerHTML = `<div class="empty-state">Chưa có bài viết nào.<br>Hãy là người đầu tiên <a href="/create" class="text-accent">đăng bài</a>.</div>`;
+        postFeed.innerHTML = `<div class="empty-state">Chưa có bài viết nào.</div>`;
       } else {
         postFeed.innerHTML = items.map(p => `
           <a class="post-card" href="${p.url}">
@@ -320,7 +288,7 @@
 
   async function loadStats() {
     try {
-      const res = await fetch('/api/stats');
+      const res = await fetch('/public/stats');
       const json = await res.json();
       if (json.success) {
         document.getElementById('statLinks').textContent = json.data.totalLinks;
@@ -332,53 +300,6 @@
 
   loadPosts();
   loadStats();
-
-  // ----- Shortener widget -----
-  const form = document.getElementById('shortenForm');
-  const urlInput = document.getElementById('urlInput');
-  const shortenBtn = document.getElementById('shortenBtn');
-  const resultBox = document.getElementById('resultBox');
-  const resultUrl = document.getElementById('resultUrl');
-  const copyBtn = document.getElementById('copyBtn');
-  const openBtn = document.getElementById('openBtn');
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const url = urlInput.value.trim();
-    if (!url) return;
-
-    shortenBtn.disabled = true;
-    shortenBtn.textContent = 'Đang tạo...';
-    resultBox.classList.remove('is-visible');
-
-    try {
-      const res = await fetch('/api/links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
-      const json = await res.json();
-
-      if (!json.success) {
-        window.showToast(json.error.message || 'Có lỗi xảy ra.');
-        return;
-      }
-
-      resultUrl.textContent = json.data.shortUrl;
-      openBtn.href = json.data.shortUrl;
-      resultBox.classList.add('is-visible');
-      copyBtn.onclick = () => {
-        navigator.clipboard.writeText(json.data.shortUrl);
-        window.showToast('Đã sao chép vào bộ nhớ tạm!');
-      };
-      loadStats();
-    } catch (err) {
-      window.showToast('Không thể kết nối tới server.');
-    } finally {
-      shortenBtn.disabled = false;
-      shortenBtn.textContent = 'Tạo link rút gọn';
-    }
-  });
 })();
 </script>
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Đang chuyển hướng… — Tín Hiệu</title>
+<title>Đang chuyển hướng… — Happyshortlink</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
@@ -65,6 +65,10 @@
     font-size: 1.3rem;
     margin: 0 0 10px;
   }
+
+  /* Trong lúc đếm ngược: KHÔNG hiện link gốc, chỉ hiện một dòng
+     placeholder che giấu (kiểu "đang xác minh") để người dùng biết
+     hệ thống đang xử lý nhưng không lộ đích đến. */
   .dest-preview {
     font-family: var(--font-mono);
     font-size: 0.85rem;
@@ -75,7 +79,9 @@
     padding: 10px 14px;
     word-break: break-all;
     margin-bottom: 26px;
+    letter-spacing: 0.02em;
   }
+  .dest-preview .lock-icon { margin-right: 6px; opacity: 0.7; }
 
   .go-btn {
     width: 100%;
@@ -98,6 +104,14 @@
     color: var(--text-muted);
   }
 
+  .fallback-hint {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    display: none;
+  }
+  .fallback-hint.is-visible { display: block; }
+
   .error-box { display: none; }
   .error-box.is-visible { display: block; }
   .hide-on-error.is-hidden { display: none; }
@@ -109,11 +123,10 @@
   <nav class="nav">
     <a href="/" class="logo">
       <span class="logo-mark" aria-hidden="true"></span>
-      Tín Hiệu
+      Happyshortlink
     </a>
     <div class="nav-links">
       <a href="/" class="nav-link"><span class="full">Bảng tin</span> 📰</a>
-      <a href="/create" class="nav-link"><span class="full">Đăng bài</span> ✍️</a>
     </div>
   </nav>
 </header>
@@ -138,11 +151,12 @@
       </div>
     </div>
 
-    <p class="status-text" id="statusText">Đang chuẩn bị chuyển hướng…</p>
-    <div class="dest-preview" id="destPreview">—</div>
+    <p class="status-text" id="statusText">Đang xác minh liên kết…</p>
+    <div class="dest-preview" id="destPreview"><span class="lock-icon">🔒</span><span id="destPreviewText">Liên kết đích được ẩn cho tới khi xác minh xong</span></div>
 
     <a class="btn btn-primary go-btn" id="goBtn">Đi đến trang đích →</a>
-    <p class="skip-hint">Liên kết được kiểm tra và rút gọn bởi Tín Hiệu.</p>
+    <p class="skip-hint" id="skipHint">Hệ thống sẽ tự động chuyển hướng khi đếm ngược kết thúc.</p>
+    <p class="fallback-hint" id="fallbackHint">Nếu trình duyệt không tự chuyển hướng, hãy bấm nút phía trên.</p>
   </div>
 
   <div class="redirect-card card error-box" id="errorState">
@@ -153,7 +167,7 @@
 </main>
 
 <footer class="site-footer">
-  Tín Hiệu — hệ thống rút gọn liên kết &amp; bảng tin.
+  Happyshortlink — hệ thống rút gọn liên kết &amp; bảng tin.
 </footer>
 
 <script src="/app.js"></script>
@@ -171,7 +185,8 @@
   const ringProgress = document.getElementById('ringProgress');
   const countNumber = document.getElementById('countNumber');
   const statusText = document.getElementById('statusText');
-  const destPreview = document.getElementById('destPreview');
+  const skipHint = document.getElementById('skipHint');
+  const fallbackHint = document.getElementById('fallbackHint');
   const goBtn = document.getElementById('goBtn');
 
   function showError(message) {
@@ -181,29 +196,32 @@
     if (message) errorMessage.textContent = message;
   }
 
+  /**
+   * BƯỚC 1: chỉ "peek" (xem link có tồn tại không) — KHÔNG nhận
+   * originalUrl thật ở bước này. Việc này khiến link đích không
+   * bao giờ xuất hiện trong response của bước tải trang, tránh bị
+   * đọc trộm qua DevTools/Network tab trong lúc đang đếm ngược.
+   */
   async function init() {
     try {
-      const infoRes = await fetch(`/api/links/${encodeURIComponent(code)}`);
-      const infoJson = await infoRes.json();
+      const peekRes = await fetch(`/public/links/${encodeURIComponent(code)}/peek`);
+      const peekJson = await peekRes.json();
 
-      if (!infoJson.success) {
-        showError(infoJson.error?.message);
+      if (!peekJson.success) {
+        showError(peekJson.error?.message);
         return;
       }
-
-      const originalUrl = infoJson.data.originalUrl;
-      destPreview.textContent = originalUrl;
 
       loadingState.style.display = 'none';
       readyState.style.display = 'block';
 
-      startCountdown(originalUrl);
+      startCountdown();
     } catch (err) {
       showError('Không thể kết nối tới server. Vui lòng thử lại.');
     }
   }
 
-  function startCountdown(originalUrl) {
+  function startCountdown() {
     let remaining = COUNTDOWN_SECONDS;
     ringProgress.setAttribute('stroke-dasharray', CIRCUMFERENCE.toFixed(2));
 
@@ -220,7 +238,7 @@
 
       if (remaining <= 0) {
         clearInterval(timer);
-        finish(originalUrl);
+        finish();
         return;
       }
       remaining -= 1;
@@ -230,20 +248,54 @@
     const timer = setInterval(tick, 1000);
   }
 
-  async function finish(originalUrl) {
-    statusText.textContent = 'Liên kết của bạn đã sẵn sàng';
-    document.getElementById('ringLabel').textContent = 'hoàn tất';
-    countNumber.textContent = '✓';
+  /**
+   * BƯỚC 2: hết 30 giây mới gọi resolve để LẤY originalUrl thật và
+   * tăng lượt click. Đây là lần duy nhất link gốc xuất hiện ở phía
+   * client — ngay trước khi chuyển hướng.
+   *
+   * Sau khi có link, ta:
+   *  a) thử window.location.replace() để tự động chuyển hướng;
+   *  b) đồng thời hiện nút "Đi đến trang đích" làm phương án dự
+   *     phòng — nếu vì lý do nào đó (popup blocker, lỗi script,
+   *     trình duyệt chặn auto-redirect...) bước (a) không chạy
+   *     được, người dùng vẫn có thể tự bấm để đi tiếp.
+   */
+  async function finish() {
+    statusText.textContent = 'Đang lấy liên kết đích…';
 
-    goBtn.href = originalUrl;
-    goBtn.classList.add('is-ready');
-    goBtn.target = '_blank';
-    goBtn.rel = 'noopener noreferrer';
+    try {
+      const res = await fetch(`/public/links/${encodeURIComponent(code)}/resolve`, { method: 'POST' });
+      const json = await res.json();
 
-    // Ghi nhận lượt click khi người dùng thực sự bấm đi (resolve = tăng counter)
-    goBtn.addEventListener('click', () => {
-      fetch(`/api/links/${encodeURIComponent(code)}/resolve`, { method: 'POST' }).catch(() => {});
-    }, { once: true });
+      if (!json.success) {
+        showError(json.error?.message);
+        return;
+      }
+
+      const originalUrl = json.data.originalUrl;
+
+      statusText.textContent = 'Liên kết của bạn đã sẵn sàng';
+      document.getElementById('ringLabel').textContent = 'hoàn tất';
+      countNumber.textContent = '✓';
+      skipHint.style.display = 'none';
+      fallbackHint.classList.add('is-visible');
+
+      goBtn.href = originalUrl;
+      goBtn.classList.add('is-ready');
+      goBtn.target = '_blank';
+      goBtn.rel = 'noopener noreferrer';
+
+      // (a) Thử tự động chuyển hướng ngay trong tab hiện tại.
+      window.setTimeout(() => {
+        try {
+          window.location.href = originalUrl;
+        } catch (e) {
+          // im lặng — nút dự phòng (b) đã sẵn sàng ở trên
+        }
+      }, 400);
+    } catch (err) {
+      showError('Không thể lấy liên kết đích. Vui lòng thử lại.');
+    }
   }
 
   init();

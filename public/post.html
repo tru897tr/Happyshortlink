@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Đang tải bài viết… — Tín Hiệu</title>
+<title>Đang tải bài viết… — Happyshortlink</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
@@ -78,11 +78,10 @@
   <nav class="nav">
     <a href="/" class="logo">
       <span class="logo-mark" aria-hidden="true"></span>
-      Tín Hiệu
+      Happyshortlink
     </a>
     <div class="nav-links">
       <a href="/" class="nav-link"><span class="full">Bảng tin</span> 📰</a>
-      <a href="/create" class="nav-link"><span class="full">Đăng bài</span> ✍️</a>
     </div>
   </nav>
 </header>
@@ -95,7 +94,7 @@
 </main>
 
 <footer class="site-footer">
-  Tín Hiệu — hệ thống rút gọn liên kết &amp; bảng tin.
+  Happyshortlink — hệ thống rút gọn liên kết &amp; bảng tin.
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -122,7 +121,7 @@
 
   async function load() {
     try {
-      const res = await fetch(`/api/posts/${encodeURIComponent(slug)}`);
+      const res = await fetch(`/public/posts/${encodeURIComponent(slug)}`);
       const json = await res.json();
 
       if (!json.success) {
@@ -137,7 +136,7 @@
       }
 
       const p = json.data;
-      document.title = `${p.title} — Tín Hiệu`;
+      document.title = `${p.title} — Happyshortlink`;
 
       container.innerHTML = `
         <a href="/" class="back-link">← Quay lại bảng tin</a>
