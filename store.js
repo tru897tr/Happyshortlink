@@ -208,6 +208,8 @@ function deletePost(id) {
 
 /* ============================ STATS ============================ */
 
+const SERVER_STARTED_AT = Date.now();
+
 function getStats() {
   return {
     totalLinks: links.size,
@@ -218,8 +220,6 @@ function getStats() {
     uptimeSeconds: Math.floor((Date.now() - SERVER_STARTED_AT) / 1000),
   };
 }
-
-const SERVER_STARTED_AT = Date.now();
 
 /* ============================ CLEANUP JOB ============================ */
 

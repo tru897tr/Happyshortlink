@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: shortlink-news-api
+    name: happyshortlink
     runtime: node
     plan: free
     buildCommand: npm install
@@ -9,7 +9,16 @@ services:
       - key: NODE_VERSION
         value: 20.x
       # BASE_URL: nên đặt sau khi Render cấp domain, ví dụ:
-      # https://shortlink-news-api.onrender.com
+      # https://happyshortlink.onrender.com
       # Nếu không đặt, server tự suy ra từ request host.
       - key: BASE_URL
         sync: false
+      # ADMIN_API_KEY: BẮT BUỘC — toàn bộ /api/* sẽ bị chặn (503)
+      # nếu chưa đặt biến này. Dùng một chuỗi dài, khó đoán.
+      - key: ADMIN_API_KEY
+        sync: false
+      # LOG_LEVEL: "debug" để log chi tiết hơn ra Render Logs,
+      # "info" để log gọn hơn. Lỗi (error) luôn được log đầy đủ
+      # bất kể giá trị này.
+      - key: LOG_LEVEL
+        value: info
