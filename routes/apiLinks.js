@@ -89,14 +89,16 @@ router.get('/:code', (req, res) => {
  * GET /api/links?limit=&offset=
  */
 router.get('/', (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+  // Không giới hạn: nếu không truyền "limit", trả về TOÀN BỘ link.
+  const hasLimit = req.query.limit !== undefined;
+  const limit = hasLimit ? Math.max(parseInt(req.query.limit, 10) || 0, 0) : Infinity;
   const offset = parseInt(req.query.offset, 10) || 0;
   const { total, items } = store.listLinks({ limit, offset });
   const base = getBaseUrl(req);
 
   return ok(res, {
     total,
-    limit,
+    limit: hasLimit ? limit : null,
     offset,
     items: items.map((r) => ({
       code: r.code,

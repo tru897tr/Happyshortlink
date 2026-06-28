@@ -71,7 +71,9 @@ router.post('/', (req, res) => {
  * GET /api/posts?limit=&offset=&tag=
  */
 router.get('/', (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+  // Không giới hạn: nếu không truyền "limit", trả về TOÀN BỘ bài viết.
+  const hasLimit = req.query.limit !== undefined;
+  const limit = hasLimit ? Math.max(parseInt(req.query.limit, 10) || 0, 0) : Infinity;
   const offset = parseInt(req.query.offset, 10) || 0;
   const tag = req.query.tag || null;
 
@@ -80,7 +82,7 @@ router.get('/', (req, res) => {
 
   return ok(res, {
     total,
-    limit,
+    limit: hasLimit ? limit : null,
     offset,
     items: items.map((p) => ({
       id: p.id,

@@ -30,7 +30,11 @@ const router = express.Router();
  * Dùng cho bảng tin ở trang chủ.
  */
 router.get('/posts', (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 50);
+  // Không giới hạn số lượng: nếu không truyền "limit", trả về TOÀN BỘ
+  // bài viết hiện có. Nếu người dùng vẫn truyền limit/offset, hệ thống
+  // vẫn tôn trọng để hỗ trợ phân trang khi cần.
+  const hasLimit = req.query.limit !== undefined;
+  const limit = hasLimit ? Math.max(parseInt(req.query.limit, 10) || 0, 0) : Infinity;
   const offset = parseInt(req.query.offset, 10) || 0;
   const tag = req.query.tag || null;
 
@@ -39,7 +43,7 @@ router.get('/posts', (req, res) => {
 
   return ok(res, {
     total,
-    limit,
+    limit: hasLimit ? limit : null,
     offset,
     items: items.map((p) => ({
       slug: p.slug,
