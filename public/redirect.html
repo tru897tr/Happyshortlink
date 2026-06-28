@@ -9,11 +9,17 @@
 <link rel="stylesheet" href="/style.css">
 <style>
   .redirect-wrap {
-    min-height: calc(100vh - 70px);
+    flex: 1;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 40px 20px;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
   .redirect-card {
     max-width: 480px;
@@ -114,7 +120,6 @@
 
   .error-box { display: none; }
   .error-box.is-visible { display: block; }
-  .hide-on-error.is-hidden { display: none; }
 </style>
 </head>
 <body>
@@ -138,7 +143,7 @@
     <div class="skeleton" style="height:40px; border-radius:8px;"></div>
   </div>
 
-  <div class="redirect-card hide-on-error" id="readyState" style="display:none;">
+  <div class="redirect-card" id="readyState" style="display:none;">
     <div class="ring-wrap">
       <svg width="200" height="200" viewBox="0 0 200 200">
         <circle class="ring-track" cx="100" cy="100" r="90"></circle>
@@ -168,6 +173,7 @@
 
 <footer class="site-footer">
   Happyshortlink — hệ thống rút gọn liên kết &amp; bảng tin.
+  <span class="footer-credit">Dev by Tru897tr (Nguyễn Trứ)</span>
 </footer>
 
 <script src="/app.js"></script>
@@ -222,30 +228,44 @@
   }
 
   function startCountdown() {
-    let remaining = COUNTDOWN_SECONDS;
     ringProgress.setAttribute('stroke-dasharray', CIRCUMFERENCE.toFixed(2));
+    // Tắt transition CSS cho vòng tròn — ta tự nội suy bằng rAF mỗi
+    // khung hình để chuyển động mượt, tránh hiệu ứng "giật" do vừa
+    // đổi transition 1s vừa nhảy giá trị mỗi giây (không đồng bộ
+    // với số hiển thị).
+    ringProgress.style.transition = 'stroke 0.3s';
 
-    function tick() {
-      countNumber.textContent = remaining;
-      const fraction = remaining / COUNTDOWN_SECONDS;
+    const startTime = performance.now();
+    const totalMs = COUNTDOWN_SECONDS * 1000;
+    let lastWholeSecond = COUNTDOWN_SECONDS;
+
+    function frame(now) {
+      const elapsed = now - startTime;
+      const remainingMs = Math.max(totalMs - elapsed, 0);
+      const fraction = remainingMs / totalMs;
       const offset = CIRCUMFERENCE * (1 - fraction);
       ringProgress.style.strokeDashoffset = offset.toFixed(2);
 
-      if (remaining <= 5) {
+      const wholeSecond = Math.ceil(remainingMs / 1000);
+      if (wholeSecond !== lastWholeSecond) {
+        lastWholeSecond = wholeSecond;
+        countNumber.textContent = wholeSecond;
+      }
+
+      if (wholeSecond <= 5) {
         ringProgress.style.stroke = 'var(--warn)';
         countNumber.style.color = 'var(--warn)';
       }
 
-      if (remaining <= 0) {
-        clearInterval(timer);
+      if (remainingMs <= 0) {
         finish();
         return;
       }
-      remaining -= 1;
+      requestAnimationFrame(frame);
     }
 
-    tick();
-    const timer = setInterval(tick, 1000);
+    countNumber.textContent = COUNTDOWN_SECONDS;
+    requestAnimationFrame(frame);
   }
 
   /**
@@ -254,11 +274,11 @@
    * client — ngay trước khi chuyển hướng.
    *
    * Sau khi có link, ta:
-   *  a) thử window.location.replace() để tự động chuyển hướng;
+   *  a) tự động chuyển hướng tab hiện tại bằng window.location.href;
    *  b) đồng thời hiện nút "Đi đến trang đích" làm phương án dự
-   *     phòng — nếu vì lý do nào đó (popup blocker, lỗi script,
-   *     trình duyệt chặn auto-redirect...) bước (a) không chạy
-   *     được, người dùng vẫn có thể tự bấm để đi tiếp.
+   *     phòng — nếu vì lý do nào đó (lỗi script, hạn chế của trình
+   *     duyệt...) bước (a) không chạy được, người dùng vẫn có thể
+   *     tự bấm để đi tiếp, dùng cùng tab hiện tại.
    */
   async function finish() {
     statusText.textContent = 'Đang lấy liên kết đích…';
@@ -280,19 +300,19 @@
       skipHint.style.display = 'none';
       fallbackHint.classList.add('is-visible');
 
+      // Nút dự phòng dùng CÙNG tab hiện tại (không mở tab mới),
+      // để nhất quán với hành vi tự động chuyển hướng bên dưới —
+      // tránh trường hợp tự động redirect đã chạy (rời trang) mà
+      // nút vẫn mở thêm một tab trùng nội dung.
       goBtn.href = originalUrl;
       goBtn.classList.add('is-ready');
-      goBtn.target = '_blank';
-      goBtn.rel = 'noopener noreferrer';
 
-      // (a) Thử tự động chuyển hướng ngay trong tab hiện tại.
+      // Tự động chuyển hướng. Nếu vì lý do nào đó (popup blocker,
+      // lỗi script, hạn chế của trình duyệt...) lệnh này không thực
+      // thi được, nút dự phòng ở trên vẫn luôn sẵn sàng để bấm.
       window.setTimeout(() => {
-        try {
-          window.location.href = originalUrl;
-        } catch (e) {
-          // im lặng — nút dự phòng (b) đã sẵn sàng ở trên
-        }
-      }, 400);
+        window.location.href = originalUrl;
+      }, 500);
     } catch (err) {
       showError('Không thể lấy liên kết đích. Vui lòng thử lại.');
     }

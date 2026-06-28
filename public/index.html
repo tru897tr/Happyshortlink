@@ -136,24 +136,19 @@
 
   .stat-strip {
     display: flex;
-    gap: 18px;
     font-family: var(--font-mono);
     font-size: 0.8rem;
     color: var(--text-muted);
   }
-  .stat-strip b { color: var(--text); font-size: 1rem; display: block; font-family: var(--font-display); }
-
-  .about-card .card-title {
-    font-family: var(--font-display);
-    font-size: 1.02rem;
-    margin: 0 0 8px;
+  .stat-strip > div {
+    flex: 1;
+    padding: 0 14px;
+    text-align: center;
   }
-  .about-card p {
-    font-size: 0.86rem;
-    color: var(--text-muted);
-    margin: 0;
-    line-height: 1.6;
-  }
+  .stat-strip > div:first-child { padding-left: 0; }
+  .stat-strip > div:last-child { padding-right: 0; }
+  .stat-strip > div + div { border-left: 1px solid var(--border); }
+  .stat-strip b { color: var(--text); font-size: 1.05rem; display: block; font-family: var(--font-display); margin-bottom: 2px; }
 
   .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }
 </style>
@@ -175,9 +170,9 @@
 <main class="container">
 
   <section class="hero">
-    <div class="hero-eyebrow"><span class="pulse-dot"></span> Dữ liệu xử lý trực tiếp trong RAM</div>
+    <div class="hero-eyebrow"><span class="pulse-dot"></span> Cập nhật theo thời gian thực</div>
     <h1>Theo dõi tin tức mới nhất.</h1>
-    <p class="lead">Bảng tin được phát theo thời gian thực — không cần cơ sở dữ liệu, không cần chờ đợi.</p>
+    <p class="lead">Bảng tin tổng hợp những bài viết mới nhất, sắp xếp theo thời gian đăng tải.</p>
   </section>
 
   <div class="layout">
@@ -202,19 +197,14 @@
           <div><b id="statClicks">—</b>lượt nhấp</div>
         </div>
       </div>
-
-      <div class="card about-card">
-        <p class="card-title">Về Happyshortlink</p>
-        <p>Hệ thống rút gọn liên kết &amp; bảng tin. Việc tạo liên kết rút gọn và đăng bài viết
-        chỉ thực hiện được qua API quản trị có xác thực — không khả dụng trực tiếp trên trang web này.</p>
-      </div>
     </aside>
   </div>
 
 </main>
 
 <footer class="site-footer">
-  Happyshortlink — hệ thống rút gọn liên kết &amp; bảng tin, dữ liệu lưu trong bộ nhớ server.
+  Happyshortlink — hệ thống rút gọn liên kết &amp; bảng tin.
+  <span class="footer-credit">Dev by Tru897tr (Nguyễn Trứ)</span>
 </footer>
 
 <div class="toast" id="toast"></div>

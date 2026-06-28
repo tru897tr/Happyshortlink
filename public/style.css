@@ -286,6 +286,22 @@ img { max-width: 100%; display: block; }
 
 /* ---------------------------- AdBlock overlay ---------------------------- */
 
+/* Khi phát hiện AdBlock: khoá cứng scroll + tương tác của toàn bộ
+   trang phía sau overlay (không chỉ che bằng overlay mà còn chặn
+   thật sự, tránh trường hợp người dùng vẫn cuộn/đọc được nội dung
+   bên dưới bằng touch hoặc bàn phím). */
+body.adblock-locked {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
+body.adblock-locked [data-adblock-inert] {
+  pointer-events: none !important;
+  user-select: none !important;
+  filter: blur(2px);
+}
+
 #adblockOverlay {
   position: fixed;
   inset: 0;
@@ -296,6 +312,7 @@ img { max-width: 100%; display: block; }
   align-items: center;
   justify-content: center;
   padding: 20px;
+  pointer-events: auto;
 }
 
 .adblock-box {
@@ -333,6 +350,13 @@ img { max-width: 100%; display: block; }
   text-align: center;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.site-footer .footer-credit {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: #5a6170;
 }
 
 /* ---------------------------- Responsive helpers ---------------------------- */
